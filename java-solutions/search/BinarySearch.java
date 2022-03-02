@@ -2,8 +2,8 @@ package search;
 
 public class BinarySearch {
 
-    // Pred: for i = 0...a.size-1 : a[i] >= a[i+1] && l < key <= r
-    // Post: key >= a[R(принадлежит)[0..a.length-1)] || R == a.length && for i = 0 ... key : a[i] > R
+    // Pred: for i = 0...a.size-1 : a[i] >= a[i+1]
+    // Post: a[R] <= key && a[R] < a[R-1]
     static int iSearch(int key, int[] a) {
         // Pred
         int r = a.length;
@@ -50,9 +50,10 @@ public class BinarySearch {
         }
     }
 */
-    
-    // Pred: for i = 0...a.size-1 : a[i] >= a[i+1] && l < key <= r && l >=0 && r <= a.size
-    // Post: R = a.size || R >= [0..a.size] && R >= 0 && R <= key && for i = 0 ... key  : a[i] <= R && for i = key + 1 ... a.size: a[i] >= R
+
+
+    // Pred: for i = 0...a.size-1 : a[i] >= a[i+1]
+    // Post: a[R] <= key && a[R] < a[R-1
     static int rSearch(long key, int[] a, int left, int right) {
         // Pred
         if (right == left + 1) {

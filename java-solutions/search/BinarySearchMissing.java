@@ -2,7 +2,8 @@ package search;
 
 public class BinarySearchMissing {
 
-    //sort(a)
+    // Pred: for i = 0 .. a.size-1: a[i]<=a[i-1]
+    // Post: a[R] <= key && (R = 0 || a[R-1] < key)
     static int iSearch(int key, int[] a) {
         int r = a.length;
         // r' = a.length
@@ -66,7 +67,8 @@ public class BinarySearchMissing {
             return rSearch(key, a, right);
         }
     }*/
-    // sort (a)
+    // Pred: for i = 0 .. a.size-1: a[i]<=a[i-1]
+    // Post: a[R] <= key && (R = 0 || a[R-1] < key)
     static int rSearch(long key, int[] a, int left, int right) {
 
 
@@ -109,7 +111,8 @@ public class BinarySearchMissing {
         return rSearch(key, a, left, right);
     }
 
-    // args.length != 0
+    // Pred: args.length != 0
+    // Post: a[R] <= key && (R = 0 || a[R-1] < key)
     public static void main(String[] args) {
 
         int[] mas = new int[args.length - 1];

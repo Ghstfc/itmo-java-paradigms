@@ -34,6 +34,11 @@ import java.util.Objects;
     Pred: true
     Post: for i=1..n a[i] = null && n' = 0
     clear
+
+
+    Pred: true
+    Post: R = \sum 1->n : 1 * [ a[i] == key ]
+    count(key)
     */
 public class ArrayQueueADT {
     private Object[] elements = new Object[2];
