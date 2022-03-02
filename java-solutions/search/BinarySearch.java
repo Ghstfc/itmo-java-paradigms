@@ -83,7 +83,7 @@ public class BinarySearch {
         for (int i = 1; i < args.length; i++) {
             mas[i - 1] = Integer.parseInt(args[i]);
         }
-        left = -1;
+        // left = -1;
         int a = rSearch(Long.parseLong(args[0]), mas, -1, mas.length);
         System.out.println(a);
         /*
