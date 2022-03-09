@@ -4,9 +4,9 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /*
-    n -- size of queue
     Model : a[1]...a[n]
-
+            front = -1;
+            rear = -1;
     Invariant : for i=1...n: a[n] != null
 
     Let immutable(n) : for i=1..n: a'[i] == a[i]
@@ -16,11 +16,11 @@ import java.util.Objects;
     enqueue(object)
 
     Pred: a.length != 0
-    Post: R = a[n] && immutable
+    Post: immutable
     element
 
     Pred: n > 0
-    Post: R = a[1] && n' = n - 1 && for i=1..n a'[i] = a[i+1]
+    Post: R = a[front] && front' = front + 1 for i=front..n a[i] = a[i+1]
     dequeue
 
     Pred: true
@@ -34,29 +34,24 @@ import java.util.Objects;
     Pred: true
     Post: for i=1..n a[i] = null && n' = 0
     clear
-
-
-    Pred: true
-    Post: R = sum 1->n : 1 * [ a[i] == key ]
-    count(key)
     */
-public class ArrayQueue {
+public class ArrayQueue extends AbstractQueue {
     private Object[] elements;
     private int front = 0;
     private int rear = 0;
-    private int size = 0;
     private int right = 0;
+
 
 
     public ArrayQueue() {
         elements = new Object[2];
     }
 
-    public void enqueue(ArrayQueue this, Object element) {
+    protected void enqueueImpl(Object element) {
         Objects.requireNonNull(element);
         ensureCapacity(this);
         this.elements[this.rear++] = element;
-        this.size++;
+
     }
 
     private void ensureCapacity(ArrayQueue queue) {
@@ -81,10 +76,10 @@ public class ArrayQueue {
         return this.elements[this.front];
     }
 
-    public Object dequeue(ArrayQueue this) {
+    public Object dequeueImpl(ArrayQueue this) {
         Object tmp = this.elements[this.front];
         this.elements[this.front++] = null;
-        this.size--;
+
         if (this.size == 0) {
             this.front = 0;
             this.rear = 0;
@@ -95,13 +90,6 @@ public class ArrayQueue {
         return tmp;
     }
 
-    public int size(ArrayQueue this) {
-        return this.size;
-    }
-
-    public boolean isEmpty(ArrayQueue this) {
-        return this.size == 0;
-    }
 
     public void clear(ArrayQueue this) {
         Arrays.fill(this.elements, null);
