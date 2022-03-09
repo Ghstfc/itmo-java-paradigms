@@ -5,22 +5,20 @@ import java.util.Objects;
 
 /*
     Model : a[1]...a[n]
-            front = -1;
-            rear = -1;
     Invariant : for i=1...n: a[n] != null
 
     Let immutable(n) : for i=1..n: a'[i] == a[i]
 
     Pred: object != null
-    Post: n' = n + 1 && a[n'] = object && immutable
+    Post: n' = n + 1 && a[n'] = object && immutable(n)
     enqueue(object)
 
     Pred: a.length != 0
-    Post: immutable
+    Post: R = a[1] && immutable(n) && n' == n
     element
 
     Pred: n > 0
-    Post: R = a[front] && front' = front + 1 for i=front..n a[i] = a[i+1]
+    Post: R = a[1] && for i=1..n a'[i] = a[i+1]
     dequeue
 
     Pred: true
