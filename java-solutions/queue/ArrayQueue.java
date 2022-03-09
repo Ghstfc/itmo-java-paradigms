@@ -37,7 +37,7 @@ import java.util.Objects;
 
 
     Pred: true
-    Post: R = \sum 1->n : 1 * [ a[i] == key ]
+    Post: R = sum 1->n : 1 * [ a[i] == key ]
     count(key)
     */
 public class ArrayQueue {

@@ -53,20 +53,7 @@ public class BinarySearchMissing {
         }
 
     }
-/*
-    private static int left = -1;
-    static int rSearch(long key, int[] a, int right) {
-        int m = (left + right) / 2;
-        if (right - left == 1) {
-            return right;
-        }
-        if (a[m] <= key) {
-            return rSearch(key, a, m);
-        } else {
-            left = m ;
-            return rSearch(key, a, right);
-        }
-    }*/
+
     // Pred: for i = 0 .. a.size-1: a[i]<=a[i-1]
     // Post: a[R] <= key && (R = 0 || a[R-1] < key)
     static int rSearch(long key, int[] a, int left, int right) {

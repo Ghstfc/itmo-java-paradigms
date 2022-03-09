@@ -35,22 +35,6 @@ public class BinarySearch {
         // key <= a[r']
         return r;
     }
-/*
-    private static int left = -1;
-    static int rSearch(long key, int[] a, int right) {
-        int m = (left + right) / 2;
-        if (right - left == 1) {
-            return right;
-        }
-        if (a[m] <= key) {
-            return rSearch(key, a, m);
-        } else {
-            left = m ;
-            return rSearch(key, a, right);
-        }
-    }
-*/
-
 
     // Pred: for i = 0...a.size-1 : a[i] >= a[i+1]
     // Post: a[R] <= key && a[R] < a[R-1
@@ -84,7 +68,6 @@ public class BinarySearch {
         for (int i = 1; i < args.length; i++) {
             mas[i - 1] = Integer.parseInt(args[i]);
         }
-        // left = -1;
         int a = rSearch(Long.parseLong(args[0]), mas, -1, mas.length);
         System.out.println(a);
         /*
