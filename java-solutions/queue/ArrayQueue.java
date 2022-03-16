@@ -2,37 +2,8 @@ package queue;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Predicate;
 
-/*
-    Model : a[1]...a[n]
-    Invariant : for i=1...n: a[n] != null
-
-    Let immutable(n) : for i=1..n: a'[i] == a[i]
-
-    Pred: object != null
-    Post: n' = n + 1 && a[n'] = object && immutable(n)
-    enqueue(object)
-
-    Pred: a.length != 0
-    Post: R = a[1] && immutable(n) && n' == n
-    element
-
-    Pred: n > 0
-    Post: R = a[1] && for i=1..n a'[i] = a[i+1]
-    dequeue
-
-    Pred: true
-    Post: R == n && n' = n && immutable
-    size
-
-    Pred: true
-    Post: R = (n == 0) && n' = n && immutable
-    isEmpty
-
-    Pred: true
-    Post: for i=1..n a[i] = null && n' = 0
-    clear
-    */
 public class ArrayQueue extends AbstractQueue {
     private Object[] elements;
     private int front = 0;
@@ -104,6 +75,17 @@ public class ArrayQueue extends AbstractQueue {
         int count = 0;
         for (int i = 0; i < this.size; i++) {
             if (this.elements[(this.front + i) % this.elements.length].equals(x)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    protected int countIfimpl(Predicate<Object> predicate) {
+        int count = 0;
+        for (int i = 0; i < this.size; i++) {
+            if (predicate.test(this.elements[(this.front + i) % this.elements.length])) {
                 count++;
             }
         }

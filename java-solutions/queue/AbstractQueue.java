@@ -1,6 +1,7 @@
 package queue;
 
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public abstract class AbstractQueue implements Queue {
 
@@ -35,4 +36,11 @@ public abstract class AbstractQueue implements Queue {
     }
 
     protected abstract Object dequeueImpl();
+
+    @Override
+    public int countIf(Predicate<Object> predicate) {
+        return countIfimpl(predicate);
+    }
+
+    protected abstract int countIfimpl(Predicate<Object> predicate);
 }
