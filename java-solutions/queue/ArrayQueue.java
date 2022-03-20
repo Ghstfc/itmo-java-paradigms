@@ -18,6 +18,7 @@ public class ArrayQueue extends AbstractQueue {
 
     protected void enqueueImpl(Object element) {
         Objects.requireNonNull(element);
+        // :NOTE: не нужно передавать this в качестве аргумента, это абсолютно не нужно
         ensureCapacity(this);
         this.elements[this.rear++] = element;
 
@@ -59,7 +60,7 @@ public class ArrayQueue extends AbstractQueue {
         return tmp;
     }
 
-
+    // :NOTE: аналогично комментарию выше, можно не писать this и обращаться к полям без this
     public void clear(ArrayQueue this) {
         Arrays.fill(this.elements, null);
         this.size = 0;
@@ -81,6 +82,7 @@ public class ArrayQueue extends AbstractQueue {
         return count;
     }
 
+    // :NOTE: дублирование кода с count
     @Override
     protected int countIfimpl(Predicate<Object> predicate) {
         int count = 0;
