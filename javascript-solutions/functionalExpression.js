@@ -9,7 +9,7 @@ let variable = f => (...args) => {
             return args[2];
     }
 }
-let cnst = f => (...args) => f;
+let cnst = f => () => f;
 let add = (f1, f2) => (...args) => f1(...args) + f2(...args);
 let subtract = (f1, f2) => (...args) => f1(...args) - f2(...args);
 let divide = (f1, f2) => (...args) => f1(...args) / f2(...args);
