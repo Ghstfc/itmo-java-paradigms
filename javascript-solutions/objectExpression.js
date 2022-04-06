@@ -100,9 +100,9 @@ function UnaryOperation(v, sign) {
                 case '-':
                     return '(negate ' + String(v.prefix()) + ')';
                 case ' sinh':
-                    return sign.trim() + " " + String(v);
+                    return "(" + sign.trim() + " " + String(v.prefix()) + ")";
                 case ' cosh':
-                    return sign.trim() + " " + String(v);
+                    return "(" + sign.trim() + " " + String(v.prefix()) + ")";
             }
         }
     }
@@ -170,26 +170,6 @@ function parse(str) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function CustomError(message) {
     Error.call(this, message);
     this.message = message;
@@ -199,6 +179,13 @@ CustomError.prototype = Object.create(Error.prototype);
 CustomError.prototype.name = "CustomError";
 
 function parsePrefix(str) {
+    if (str[0] === '(' && str[2] === ')' && str.length === 3) {
+        if (str[1] === 'x' || str[1] === 'y'||str[1] === 'z')
+            throw new CustomError("Error")
+        if (!isNaN(str[1]))
+            throw new CustomError("Error")
+    }
+    println(str);
     check(str);
     str = str.replaceAll("(", " ");
     str = str.replaceAll(")", " ");
@@ -217,17 +204,17 @@ function parsePrefix(str) {
                 stack.push(new Variable(perm[i]));
                 break;
             case '*':
-                if (stack.length === 1)
+                if (stack.length === 1 || stack.length === 0)
                     throw new CustomError("Bruh");
                 stack.push(new Multiply(stack.pop(), stack.pop()));
                 break;
             case '/':
-                if (stack.length === 1)
+                if (stack.length === 1 || stack.length === 0)
                     throw new CustomError("Bruh");
                 stack.push(new Divide(stack.pop(), stack.pop()));
                 break;
             case '+':
-                if (stack.length === 1)
+                if (stack.length === 1 || stack.length === 0)
                     throw new CustomError("Bruh");
                 stack.push(new Add(stack.pop(), stack.pop()));
                 break;
@@ -237,12 +224,18 @@ function parsePrefix(str) {
                 stack.push(new Subtract(stack.pop(), stack.pop()));
                 break;
             case'negate':
+                if (stack.length === 0)
+                    throw new CustomError("Bruh");
                 stack.push(new Negate(stack.pop()));
                 break
             case'sinh' :
+                if (stack.length === 0)
+                    throw new CustomError("Bruh");
                 stack.push(new Sinh(stack.pop()));
                 break;
             case'cosh':
+                if (stack.length === 0)
+                    throw new CustomError("Bruh");
                 stack.push(new Cosh(stack.pop()));
                 break;
             default:
