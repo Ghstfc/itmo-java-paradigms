@@ -178,76 +178,7 @@ function CustomError(message) {
 CustomError.prototype = Object.create(Error.prototype);
 CustomError.prototype.name = "CustomError";
 
-function parsePrefix(str) {
-    if (str[0] === '(' && str[2] === ')' && str.length === 3) {
-        if (str[1] === 'x' || str[1] === 'y'||str[1] === 'z')
-            throw new CustomError("Error")
-        if (!isNaN(str[1]))
-            throw new CustomError("Error")
-    }
-    println(str);
-    check(str);
-    str = str.replaceAll("(", " ");
-    str = str.replaceAll(")", " ");
-    let perm = String(str).trim().split(" ");
-    perm = perm.filter((n) => n !== "");
-    let stack = [];
-    for (let i = perm.length - 1; i >= 0; i--) {
-        if (!isNaN(Number(perm[i]))) {
-            stack.push(new Const(perm[i]));
-            continue;
-        }
-        switch (perm[i]) {
-            case 'x':
-            case 'y':
-            case 'z':
-                stack.push(new Variable(perm[i]));
-                break;
-            case '*':
-                if (stack.length === 1 || stack.length === 0)
-                    throw new CustomError("Bruh");
-                stack.push(new Multiply(stack.pop(), stack.pop()));
-                break;
-            case '/':
-                if (stack.length === 1 || stack.length === 0)
-                    throw new CustomError("Bruh");
-                stack.push(new Divide(stack.pop(), stack.pop()));
-                break;
-            case '+':
-                if (stack.length === 1 || stack.length === 0)
-                    throw new CustomError("Bruh");
-                stack.push(new Add(stack.pop(), stack.pop()));
-                break;
-            case '-':
-                if (stack.length === 1)
-                    throw new CustomError("Bruh");
-                stack.push(new Subtract(stack.pop(), stack.pop()));
-                break;
-            case'negate':
-                if (stack.length === 0)
-                    throw new CustomError("Bruh");
-                stack.push(new Negate(stack.pop()));
-                break
-            case'sinh' :
-                if (stack.length === 0)
-                    throw new CustomError("Bruh");
-                stack.push(new Sinh(stack.pop()));
-                break;
-            case'cosh':
-                if (stack.length === 0)
-                    throw new CustomError("Bruh");
-                stack.push(new Cosh(stack.pop()));
-                break;
-            default:
-                throw new CustomError("wrong token");
-        }
-    }
-    if (stack.length !== 1)
-        throw new CustomError("wrong expr");
-    return stack.pop();
-}
-
-function check(s) {
+function checkSequence(s) {
     let count = 0;
     for (let i = 0; i < s.length; i++) {
         if (s[i] === '(')
@@ -261,4 +192,62 @@ function check(s) {
     if (count > 0)
         throw new CustomError("Wrong bracket sequence");
     return true;
+}
+
+function parsePrefix(str) {
+    if (str[0] === '(' && str[2] === ')' && str.length === 3) {
+        if (str[1] === 'x' || str[1] === 'y' || str[1] === 'z')
+            throw new CustomError("Wrong expression");
+        if (!isNaN(str[1]))
+            throw new CustomError("Wrong expression");
+    }
+    //println(str);
+    checkSequence(str);
+    str = str.replaceAll("(", " ");
+    str = str.replaceAll(")", " ");
+    let perm = String(str).trim().split(" ");
+    perm = perm.filter((n) => n !== "");
+    let stack = [];
+    let perm1;
+    for (let i = perm.length - 1; i >= 0; i--) {
+        if (!isNaN(Number(perm[i]))) {
+            stack.push(new Const(perm[i]));
+            continue;
+        }
+        switch (perm[i]) {
+            case 'x':
+            case 'y':
+            case 'z':
+                stack.push(new Variable(perm1 = perm[i]));
+                break;
+            case '*':
+                stack.push(new Multiply(stack.pop(), perm1 = stack.pop()));
+                break;
+            case '/':
+                stack.push(new Divide(stack.pop(), perm1 = stack.pop()));
+                break;
+            case '+':
+                stack.push(new Add(stack.pop(), perm1 = stack.pop()));
+                break;
+            case '-':
+                stack.push(new Subtract(stack.pop(), perm1 = stack.pop()));
+                break;
+            case'negate':
+                stack.push(new Negate(perm1 = stack.pop()));
+                break
+            case'sinh' :
+                stack.push(new Sinh(perm1 = stack.pop()));
+                break;
+            case'cosh':
+                stack.push(new Cosh(perm1 = stack.pop()));
+                break;
+            default:
+                throw new CustomError("wrong token");
+        }
+        if (perm1 === undefined)
+            throw new CustomError("Error");
+    }
+    if (stack.length !== 1)
+        throw new CustomError("wrong expr");
+    return stack.pop();
 }
