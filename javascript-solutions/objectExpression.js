@@ -109,6 +109,8 @@ function UnaryOperation(v, sign) {
 }
 
 function Const(v) {
+    if (isNaN(v))
+        throw new CustomError("Wrong token");
     return UnaryOperation(v, '+');
 }
 
@@ -178,6 +180,13 @@ function CustomError(message) {
 CustomError.prototype = Object.create(Error.prototype);
 CustomError.prototype.name = "CustomError";
 
+
+// function parsePrefix(str){
+//     check(str);
+//
+// }
+
+
 function checkSequence(s) {
     let count = 0;
     for (let i = 0; i < s.length; i++) {
@@ -195,26 +204,24 @@ function checkSequence(s) {
 }
 
 function parsePrefix(str) {
-    if (str[0] === '(' && str[2] === ')' && str.length === 3) {
-        if (str[1] === 'x' || str[1] === 'y' || str[1] === 'z')
-            throw new CustomError("Wrong expression");
-        if (!isNaN(str[1]))
-            throw new CustomError("Wrong expression");
-    }
-    //println(str);
     checkSequence(str);
-    str = str.replaceAll("(", " ");
-    str = str.replaceAll(")", " ");
+    str = str.replaceAll("(", " ( ");
+    str = str.replaceAll(")", " ) ");
     let perm = String(str).trim().split(" ");
-    perm = perm.filter((n) => n !== "");
     let stack = [];
-    let perm1;
+    let perm1 = "";
     for (let i = perm.length - 1; i >= 0; i--) {
-        if (!isNaN(Number(perm[i]))) {
-            stack.push(new Const(perm[i]));
+        if (!isNaN(Number(perm[i])) && perm[i] !== '' ) {
+            stack.push(new Const(perm1 = perm[i]));
             continue;
         }
         switch (perm[i]) {
+            case '(':
+                break;
+            case ')':
+                if (perm[i - 2] === '(' || perm[i - 1] === '(')
+                    throw new CustomError("Wrong expr");
+                break;
             case 'x':
             case 'y':
             case 'z':
@@ -240,6 +247,8 @@ function parsePrefix(str) {
                 break;
             case'cosh':
                 stack.push(new Cosh(perm1 = stack.pop()));
+                break;
+            case '':
                 break;
             default:
                 throw new CustomError("wrong token");
