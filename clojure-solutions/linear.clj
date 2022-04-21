@@ -20,11 +20,3 @@
 (defn c- [v1 v2]  (mapv m- v1 v2))
 (defn c* [v1 v2]  (mapv m* v1 v2))
 (defn cd [v1 v2]  (mapv md v1 v2))
-
-
-
-
-
-
-
-
