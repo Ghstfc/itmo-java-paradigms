@@ -1,4 +1,3 @@
-;./TestClojure.sh cljtest/linear/LinearTest easy base
 (defn v+ [v1 v2] (mapv + v1 v2))
 (defn v- [v1 v2] (mapv - v1 v2))
 (defn v* [v1 v2] (mapv * v1 v2))
