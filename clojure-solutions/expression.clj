@@ -3,6 +3,7 @@
 (defn subtract [e1 e2] (fn [x] (- (e1 x) (e2 x))))
 (defn multiply [e1 e2] (fn [x] (* (e1 x) (e2 x))))
 (defn divide [e1 e2] (fn [x] (/ (double (e1 x)) (double (e2 x)))))
+; :NOTE: копипаста в бинарных функциях
 (defn variable [e] (fn [x] (get x e)))
 (defn constant [e] (fn [x] e))
 (defn negate [e] (fn [x] (- (e x))))
