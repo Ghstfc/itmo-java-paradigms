@@ -55,28 +55,27 @@
 (defn Cnst [this v]
   (assoc this :v v :sign "cnst"))
 (defn Neg [this v]
-  (assoc this :v v :sign "neg"))
+  (assoc this :v v :sign "negate"))
 (defn _Ln [this v]
   (assoc this :v v :sign "ln"))
 
 
-(def m1 {"neg" 0 "cnst" 1})
+(def m1 {"negate" 0 "cnst" 1})
 
 (def UnoProto
   {
    :_evaluate (fn [x vars]
                 (cond
-                  (contains? vars (_v x)) (double (get vars (_v x)))
-                  (= "neg" (_sign x)) (double (- (evaluate (_v x) vars)))
+                  (contains? vars (_v x))  (get vars (_v x))
+                  (= "negate" (_sign x)) (- (evaluate (_v x) vars))
                   (= "ln" (_sign x)) (Math/log (Math/abs(evaluate (_v x) vars)))
                   :else (double (_v x))
                   ))
    :_toString (fn [expr]
                 (cond
-                  (= "neg" (_sign expr)) (str "(negate " (toString (_v expr)) ")")
-                  (= "ln" (_sign expr)) (str "(ln " (toString (_v expr)) ")")
+                  (= "cnst" (_sign expr)) (str (_v expr))
                   :else
-                  (str (_v expr))
+                  (str "(" (_sign expr) " "(toString (_v expr)) ")")
                   ))
    })
 
@@ -88,25 +87,18 @@
 (defn Bin [this v1 v2]
   (assoc this :v1 v1 :v2 v2))
 
-(def m {"+" + "-" - "/" / "*" *})
+(defn My_Pow [e1 e2] (Math/pow e1 e2))
+
+(def m {"+" + "-" - "*" * "pow" My_Pow})
+
 
 (def BinProto
   {
    :_evaluate (fn [x vars] (cond
                              (= "/" (_sign x)) (/ (double (evaluate (_v1 x) vars)) (double (evaluate (_v2 x) vars)))
-                             (= "*" (_sign x)) (* (evaluate (_v1 x) vars) (evaluate (_v2 x) vars))
-                             (= "+" (_sign x)) (+ (evaluate (_v1 x) vars) (evaluate (_v2 x) vars))
-                             (= "-" (_sign x)) (- (evaluate (_v1 x) vars) (evaluate (_v2 x) vars))
-                             (= "pow" (_sign x)) (Math/pow (evaluate (_v1 x) vars) (evaluate (_v2 x) vars))
                              (= "log" (_sign x)) (/ (Math/log (Math/abs (evaluate (_v2 x) vars))) (Math/log (Math/abs (evaluate (_v1 x) vars))))
-                             :else (evaluate (_v x) vars)
-                             ; у меня сгорела жопа, ибо решение ниже должно работать идеально, но из-за незнания того,
-                             ; что находится под капотом clojure'a, я не смог это сделать красиво в 1 строчку,
-                             ; ибо при делении даблов все равно выдавало ошибку (деление на 0)
-                             ; скорее всего это связано с тем, что при доставании слэша из мапы все аргументы кастуются к object, поэтому
-                             ; при делении просиходит деление object на object и кидается ошибка, но это не точно (решение снизу все равно классное)
-                             ; да, немного копипасты никому не помешает
-                             ; (решениеб которое ниже) ---->((get m (_sign x)) (double (evaluate (_v1 x) vars)) (double (evaluate (_v2 x) vars)))
+                             :else
+                             ((get m (_sign x)) (evaluate (_v1 x) vars) (evaluate (_v2 x) vars))
                              ))
    :_toString (fn [x] (str "(" (_sign x) " " (toString (_v1 x)) " " (toString (_v2 x)) ")"))
    })
@@ -145,7 +137,7 @@
 
     (= vars (_v x)) (Constant 1)
     (= "cnst" (_sign x)) (Constant 0)
-    (= "neg" (_sign x)) (Negate (diff (_v x) vars))
+    (= "negate" (_sign x)) (Negate (diff (_v x) vars))
     :else (Constant 0)
     ))
 
@@ -161,7 +153,6 @@
     ))
 
 (defn parseObject [s] (parsef (read-string s)))
-
 
 
 
