@@ -53,31 +53,37 @@
 (def toString (method :_toString))
 
 (defn Cnst [this v]
-  (assoc this :v v :sign "%"))
+  (assoc this :v v :sign "cnst"))
 (defn Neg [this v]
-  (assoc this :v v :sign "$"))
+  (assoc this :v v :sign "neg"))
+(defn _Ln [this v]
+  (assoc this :v v :sign "ln"))
 
-(def m1 {"$" 0 "%" 1})
+
+(def m1 {"neg" 0 "cnst" 1})
 
 (def UnoProto
   {
    :_evaluate (fn [x vars]
                 (cond
                   (contains? vars (_v x)) (double (get vars (_v x)))
-                  (= 0 (get m1 (_sign x))) (double (- (evaluate (_v x) vars)))
+                  (= "neg" (_sign x)) (double (- (evaluate (_v x) vars)))
+                  (= "ln" (_sign x)) (Math/log (Math/abs(evaluate (_v x) vars)))
                   :else (double (_v x))
                   ))
    :_toString (fn [expr]
                 (cond
-                 (= "$" (_sign expr)) (str "(negate " (toString (_v expr)) ")")
-                 :else
-                 (str (_v expr))
-                 ))
+                  (= "neg" (_sign expr)) (str "(negate " (toString (_v expr)) ")")
+                  (= "ln" (_sign expr)) (str "(ln " (toString (_v expr)) ")")
+                  :else
+                  (str (_v expr))
+                  ))
    })
 
 (def Constant (constructor Cnst UnoProto))
 (def Variable (constructor Cnst UnoProto))
 (def Negate (constructor Neg UnoProto))
+(def Ln (constructor _Ln UnoProto))
 
 (defn Bin [this v1 v2]
   (assoc this :v1 v1 :v2 v2))
@@ -91,12 +97,16 @@
                              (= "*" (_sign x)) (* (evaluate (_v1 x) vars) (evaluate (_v2 x) vars))
                              (= "+" (_sign x)) (+ (evaluate (_v1 x) vars) (evaluate (_v2 x) vars))
                              (= "-" (_sign x)) (- (evaluate (_v1 x) vars) (evaluate (_v2 x) vars))
+                             (= "pow" (_sign x)) (Math/pow (evaluate (_v1 x) vars) (evaluate (_v2 x) vars))
+                             (= "log" (_sign x)) (/ (Math/log (Math/abs (evaluate (_v2 x) vars))) (Math/log (Math/abs (evaluate (_v1 x) vars))))
                              :else (evaluate (_v x) vars)
-   ; у меня сгорела жопа, ибо решение ниже должно работать идеально, но из-за незнания того,
-   ; что находится под капотом clojure'a, я не смог это сделать, ибо при делении даблов все равно выдавало ошибку (деление на 0)
-   ; скорее всего это связано с тем, что при доставании слэша из мапы все аргументы кастуются к object, поэтому
-   ; при делении просиходит деление object на object и кидается ошибка, но это не точно (решение снизу все равно классное)
-                             ;((get m (_sign x)) (double (evaluate (_v1 x) vars)) (double (evaluate (_v2 x) vars)))
+                             ; у меня сгорела жопа, ибо решение ниже должно работать идеально, но из-за незнания того,
+                             ; что находится под капотом clojure'a, я не смог это сделать красиво в 1 строчку,
+                             ; ибо при делении даблов все равно выдавало ошибку (деление на 0)
+                             ; скорее всего это связано с тем, что при доставании слэша из мапы все аргументы кастуются к object, поэтому
+                             ; при делении просиходит деление object на object и кидается ошибка, но это не точно (решение снизу все равно классное)
+                             ; да, немного копипасты никому не помешает
+                             ; (решениеб которое ниже) ---->((get m (_sign x)) (double (evaluate (_v1 x) vars)) (double (evaluate (_v2 x) vars)))
                              ))
    :_toString (fn [x] (str "(" (_sign x) " " (toString (_v1 x)) " " (toString (_v2 x)) ")"))
    })
@@ -109,11 +119,17 @@
   (assoc this :v1 v1 :v2 v2 :sign "/"))
 (defn _Multiply [this v1 v2]
   (assoc this :v1 v1 :v2 v2 :sign "*"))
+(defn _Pow [this v1 v2]
+  (assoc this :v1 v1 :v2 v2 :sign "pow"))
+(defn _Log [this v1 v2]
+  (assoc this :v1 v1 :v2 v2 :sign "log"))
 
 (def Add (constructor _Add BinProto))
 (def Divide (constructor _Divide BinProto))
 (def Subtract (constructor _Subtract BinProto))
 (def Multiply (constructor _Multiply BinProto))
+(def Log (constructor _Log BinProto))
+(def Pow (constructor _Pow BinProto))
 
 (defn diff [x vars]
   (cond
@@ -122,14 +138,18 @@
     (= "*" (_sign x)) (Add (Multiply (diff (_v1 x) vars) (_v2 x))
                            (Multiply (_v1 x) (diff (_v2 x) vars)))
     (= "/" (_sign x)) (Divide (Subtract (Multiply (diff (_v1 x) vars) (_v2 x))
-                           (Multiply (_v1 x) (diff (_v2 x) vars))) (Multiply (_v2 x) (_v2 x)))
+                                        (Multiply (_v1 x) (diff (_v2 x) vars))) (Multiply (_v2 x) (_v2 x)))
+    (= "pow" (_sign x)) (Multiply (Pow (_v1 x) (_v2 x)) (diff (Multiply (_v2 x) (Ln (_v1 x))) vars))
+    (= "ln" (_sign x)) (Multiply (Divide (Constant 1) (_v x)) (diff (_v x) vars))
+    (= "log" (_sign x)) (diff (Divide (Ln (_v2 x)) (Ln (_v1 x))) vars)
+
     (= vars (_v x)) (Constant 1)
-    (= "%" (_sign x)) (Constant 0)
-    (= "$" (_sign x)) (Negate (diff (_v x) vars))
+    (= "cnst" (_sign x)) (Constant 0)
+    (= "neg" (_sign x)) (Negate (diff (_v x) vars))
     :else (Constant 0)
     ))
 
-(def m-b {'+ Add '- Subtract '* Multiply '/ Divide})
+(def m-b {'+ Add '- Subtract '* Multiply '/ Divide 'log Log 'pow Pow})
 (def m-u {'negate Negate})
 
 (defn parsef [s]
