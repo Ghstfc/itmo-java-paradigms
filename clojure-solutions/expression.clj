@@ -184,7 +184,7 @@
 ;(def *neg (+map (constantly Negate) (+seq (_char "n") (_char "e") (_char "g") (_char "a") (_char "t") (_char "e"))))
 ;(def *pow (+map (constantly Pow) (+seq (_char "p") (_char "o") (_char "w"))))
 ;(def *pow (+map (constantly Log) (+seq (_char "l") (_char "o") (_char "g"))))
-;
+; (+seqf (fn [ps] apply (last ps) ps ) *( *value *ws (+opt *value) *ws *f *))
 ;(declare *suffix)
 ;(def *list (+map ()))
 
