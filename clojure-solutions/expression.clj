@@ -100,7 +100,6 @@
 
 (def m {"+" + "-" - "*" * "pow" My_Pow})
 
-
 (def BinProto
   {
    :_evaluate (fn [x vars] (cond
@@ -112,6 +111,8 @@
    :_toString (fn [x] (str "(" (_sign x) " " (toString (_v1 x)) " " (toString (_v2 x)) ")"))
    :_toSuffix (fn [x] (str "(" (toStringSuffix (_v1 x)) " " (toStringSuffix (_v2 x)) " " (_sign x) ")"))
    })
+
+; :NOTE:*2 classes aren't actually used
 
 (defn _Add [this v1 v2]
   (assoc this :v1 v1 :v2 v2 :sign "+"))
