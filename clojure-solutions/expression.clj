@@ -169,35 +169,35 @@
 ;(load-file "parser.clj")
 
 ;(def ops {'+ Add '- Subtract '* Multiply '/ Divide 'log Log 'pow Pow 'negate Negate})
-(def *digit (+char "0123456789"))
-(def *number (+map read-string (+str (+plus *digit))))
-
-(def *space (+char " \t\n\r"))
-(def *ws (+ignore (+star *space)))
-
-(def *var (+map (comp Variable str) (+char "xyz")))
-
-(def *sub (+map (constantly Subtract) (_char "-")))
-(def *add (+map (constantly Add) (_char "+")))
-(def *div (+map (constantly Divide) (_char "/")))
-(def *mul (+map (constantly Multiply) (_char "*")))
-(def *neg (+map (constantly Negate) (+seq (_char "n") (_char "e") (_char "g") (_char "a") (_char "t") (_char "e"))))
-(def *pow (+map (constantly Pow) (+seq (_char "p") (_char "o") (_char "w"))))
-(def *pow (+map (constantly Log) (+seq (_char "l") (_char "o") (_char "g"))))
-
-(declare *suffix)
-;(def *list (+map ()))
-
-
-(defn parsing [s]
-  (cond
-    (number? s) (Constant s)
-    (symbol? s) (Variable (name s))
-    (= 2 (count s)) ((get m-u (nth s 1)) (parsing (nth s 0)))
-    :else ((get m-b (nth s 2)) (parsing (nth s 0)) (parsing (nth s 1)))
-    ))
-
-(defn parseObjectSuffix [s] (parsing (read-string s)))
-
-
-
+;(def *digit (+char "0123456789"))
+;(def *number (+map read-string (+str (+plus *digit))))
+;
+;(def *space (+char " \t\n\r"))
+;(def *ws (+ignore (+star *space)))
+;
+;(def *var (+map (comp Variable str) (+char "xyz")))
+;
+;(def *sub (+map (constantly Subtract) (_char "-")))
+;(def *add (+map (constantly Add) (_char "+")))
+;(def *div (+map (constantly Divide) (_char "/")))
+;(def *mul (+map (constantly Multiply) (_char "*")))
+;(def *neg (+map (constantly Negate) (+seq (_char "n") (_char "e") (_char "g") (_char "a") (_char "t") (_char "e"))))
+;(def *pow (+map (constantly Pow) (+seq (_char "p") (_char "o") (_char "w"))))
+;(def *pow (+map (constantly Log) (+seq (_char "l") (_char "o") (_char "g"))))
+;
+;(declare *suffix)
+;;(def *list (+map ()))
+;
+;
+;(defn parsing [s]
+;  (cond
+;    (number? s) (Constant s)
+;    (symbol? s) (Variable (name s))
+;    (= 2 (count s)) ((get m-u (nth s 1)) (parsing (nth s 0)))
+;    :else ((get m-b (nth s 2)) (parsing (nth s 0)) (parsing (nth s 1)))
+;    ))
+;
+;(defn parseObjectSuffix [s] (parsing (read-string s)))
+;
+;
+;
