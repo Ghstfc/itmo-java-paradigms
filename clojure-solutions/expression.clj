@@ -51,7 +51,10 @@
 (def _sign (field :sign))
 (def evaluate (method :_evaluate))
 (def toString (method :_toString))
+(def toStringSuffix (method :_toSuffix))
 
+(defn Var [this v]
+  (assoc this :v (str (get v 0)) :sign "cnst"))
 (defn Cnst [this v]
   (assoc this :v v :sign "cnst"))
 (defn Neg [this v]
@@ -66,21 +69,27 @@
   {
    :_evaluate (fn [x vars]
                 (cond
-                  (contains? vars (_v x))  (get vars (_v x))
+                  (contains? vars (_v x)) (get vars (_v x))
                   (= "negate" (_sign x)) (- (evaluate (_v x) vars))
-                  (= "ln" (_sign x)) (Math/log (Math/abs(evaluate (_v x) vars)))
+                  (= "ln" (_sign x)) (Math/log (Math/abs (evaluate (_v x) vars)))
                   :else (double (_v x))
                   ))
    :_toString (fn [expr]
                 (cond
                   (= "cnst" (_sign expr)) (str (_v expr))
                   :else
-                  (str "(" (_sign expr) " "(toString (_v expr)) ")")
+                  (str "(" (_sign expr) " " (toString (_v expr)) ")")
+                  ))
+   :_toSuffix (fn [expr]
+                (cond
+                  (= "cnst" (_sign expr)) (str (_v expr))
+                  :else
+                  (str "(" (toStringSuffix (_v expr)) " " (_sign expr) ")")
                   ))
    })
 
 (def Constant (constructor Cnst UnoProto))
-(def Variable (constructor Cnst UnoProto))
+(def Variable (constructor Var UnoProto))
 (def Negate (constructor Neg UnoProto))
 (def Ln (constructor _Ln UnoProto))
 
@@ -101,6 +110,7 @@
                              ((get m (_sign x)) (evaluate (_v1 x) vars) (evaluate (_v2 x) vars))
                              ))
    :_toString (fn [x] (str "(" (_sign x) " " (toString (_v1 x)) " " (toString (_v2 x)) ")"))
+   :_toSuffix (fn [x] (str "(" (toStringSuffix (_v1 x)) " " (toStringSuffix (_v2 x)) " " (_sign x) ")"))
    })
 
 (defn _Add [this v1 v2]
@@ -153,6 +163,41 @@
     ))
 
 (defn parseObject [s] (parsef (read-string s)))
+
+
+;hw 12
+(load-file "parser.clj")
+
+;(def ops {'+ Add '- Subtract '* Multiply '/ Divide 'log Log 'pow Pow 'negate Negate})
+(def *digit (+char "0123456789"))
+(def *number (+map read-string (+str (+plus *digit))))
+
+(def *space (+char " \t\n\r"))
+(def *ws (+ignore (+star *space)))
+
+(def *var (+map (comp Variable str) (+char "xyz")))
+
+(def *sub (+map (constantly Subtract) (_char "-")))
+(def *add (+map (constantly Add) (_char "+")))
+(def *div (+map (constantly Divide) (_char "/")))
+(def *mul (+map (constantly Multiply) (_char "*")))
+(def *neg (+map (constantly Negate) (+seq (_char "n") (_char "e") (_char "g") (_char "a") (_char "t") (_char "e"))))
+(def *pow (+map (constantly Pow) (+seq (_char "p") (_char "o") (_char "w"))))
+(def *pow (+map (constantly Log) (+seq (_char "l") (_char "o") (_char "g"))))
+
+(declare *suffix)
+;(def *list (+map ()))
+
+
+(defn parsing [s]
+  (cond
+    (number? s) (Constant s)
+    (symbol? s) (Variable (name s))
+    (= 2 (count s)) ((get m-u (nth s 1)) (parsing (nth s 0)))
+    :else ((get m-b (nth s 2)) (parsing (nth s 0)) (parsing (nth s 1)))
+    ))
+
+(defn parseObjectSuffix [s] (parsing (read-string s)))
 
 
 
