@@ -166,7 +166,7 @@
 
 
 ;hw 12
-(load-file "parser.clj")
+;(load-file "parser.clj")
 
 ;(def ops {'+ Add '- Subtract '* Multiply '/ Divide 'log Log 'pow Pow 'negate Negate})
 (def *digit (+char "0123456789"))
