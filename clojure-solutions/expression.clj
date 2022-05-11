@@ -48,15 +48,16 @@
 (def _v1 (field :v1))
 (def _v2 (field :v2))
 (def _v (field :v))
+(def _perm (field :perm))
 (def _sign (field :sign))
 (def evaluate (method :_evaluate))
 (def toString (method :_toString))
 (def toStringSuffix (method :_toSuffix))
 
 (defn Var [this v]
-  (assoc this :v (str (get v 0)) :sign "cnst"))
+  (assoc this :v (clojure.string/lower-case (str (get v 0))) :perm v :sign "cnst"))
 (defn Cnst [this v]
-  (assoc this :v v :sign "cnst"))
+  (assoc this :v v :sign "cnst" :perm v))
 (defn Neg [this v]
   (assoc this :v v :sign "negate"))
 (defn _Ln [this v]
@@ -82,7 +83,7 @@
                   ))
    :_toSuffix (fn [expr]
                 (cond
-                  (= "cnst" (_sign expr)) (str (_v expr))
+                  (= "cnst" (_sign expr)) (str (_perm expr))
                   :else
                   (str "(" (toStringSuffix (_v expr)) " " (_sign expr) ")")
                   ))
@@ -111,8 +112,6 @@
    :_toString (fn [x] (str "(" (_sign x) " " (toString (_v1 x)) " " (toString (_v2 x)) ")"))
    :_toSuffix (fn [x] (str "(" (toStringSuffix (_v1 x)) " " (toStringSuffix (_v2 x)) " " (_sign x) ")"))
    })
-
-; :NOTE:*2 classes aren't actually used
 
 (defn _Add [this v1 v2]
   (assoc this :v1 v1 :v2 v2 :sign "+"))
@@ -187,18 +186,18 @@
 ;(def *pow (+map (constantly Log) (+seq (_char "l") (_char "o") (_char "g"))))
 ;
 ;(declare *suffix)
-;;(def *list (+map ()))
-;
-;
-;(defn parsing [s]
-;  (cond
-;    (number? s) (Constant s)
-;    (symbol? s) (Variable (name s))
-;    (= 2 (count s)) ((get m-u (nth s 1)) (parsing (nth s 0)))
-;    :else ((get m-b (nth s 2)) (parsing (nth s 0)) (parsing (nth s 1)))
-;    ))
-;
-;(defn parseObjectSuffix [s] (parsing (read-string s)))
-;
-;
-;
+;(def *list (+map ()))
+
+
+(defn parsing [s]
+  (cond
+    (number? s) (Constant s)
+    (symbol? s) (Variable (name s))
+    (= 2 (count s)) ((get m-u (nth s 1)) (parsing (nth s 0)))
+    :else ((get m-b (nth s 2)) (parsing (nth s 0)) (parsing (nth s 1)))
+    ))
+
+(defn parseObjectSuffix [s] (parsing (read-string s)))
+
+
+
