@@ -54,77 +54,70 @@
 (def toString (method :_toString))
 (def toStringSuffix (method :_toSuffix))
 
+
+;                 New Var and Const
+;----------------------------------------------------
+(def func (field :func))
+
+(def VarProt {
+              :_evaluate (fn [x vars] (get vars (_v x)))
+              :_toString (fn [expr] (str (_v expr)))
+              :_toSuffix (fn [expr] (str (_perm expr)))
+              })
+
+(def ConstProto {
+                 :_evaluate (fn [x vars] (_v x))
+                 :_toString (fn [expr] (str (_v expr)))
+                 :_toSuffix (fn [expr] (str (_v expr)))
+                 })
+
 (defn Var [this v]
-  (assoc this :v (clojure.string/lower-case (str (get v 0))) :perm v :sign "cnst"))
+  (assoc this :v (clojure.string/lower-case (str (get v 0))) :perm v))
+
 (defn Cnst [this v]
-  (assoc this :v v :sign "cnst" :perm v))
+  (assoc this :v v :perm v))
+
+(def Constant (constructor Cnst ConstProto))
+(def Variable (constructor Var VarProt))
+
+;                     New Negate and Ln
+;---------------------------------------------------------------
 (defn Neg [this v]
-  (assoc this :v v :sign "negate"))
+  (assoc this :v v :func (fn [x] (- x)) :sign "negate"))
 (defn _Ln [this v]
-  (assoc this :v v :sign "ln"))
-
-
-(def m1 {"negate" 0 "cnst" 1})
+  (assoc this :v v :func (fn [x] (Math/log (Math/abs x))) :sign "ln"))
 
 (def UnoProto
   {
-   :_evaluate (fn [x vars]
-                (cond
-                  (contains? vars (_v x)) (get vars (_v x))
-                  (= "negate" (_sign x)) (- (evaluate (_v x) vars))
-                  (= "ln" (_sign x)) (Math/log (Math/abs (evaluate (_v x) vars)))
-                  :else (double (_v x))
-                  ))
-   :_toString (fn [expr]
-                (cond
-                  (= "cnst" (_sign expr)) (str (_v expr))
-                  :else
-                  (str "(" (_sign expr) " " (toString (_v expr)) ")")
-                  ))
-   :_toSuffix (fn [expr]
-                (cond
-                  (= "cnst" (_sign expr)) (str (_perm expr))
-                  :else
-                  (str "(" (toStringSuffix (_v expr)) " " (_sign expr) ")")
-                  ))
+   :_evaluate (fn [x vars] ( (func x) (evaluate (_v x) vars)))
+   :_toString (fn [x] (str "(" (_sign x) " " (toString (_v x)) ")"))
+   :_toSuffix (fn [x] (str "(" (toStringSuffix (_v x)) " " (_sign x) ")"))
    })
 
-(def Constant (constructor Cnst UnoProto))
-(def Variable (constructor Var UnoProto))
 (def Negate (constructor Neg UnoProto))
 (def Ln (constructor _Ln UnoProto))
 
-(defn Bin [this v1 v2]
-  (assoc this :v1 v1 :v2 v2))
-
-(defn My_Pow [e1 e2] (Math/pow e1 e2))
-
-(def m {"+" + "-" - "*" * "pow" My_Pow})
+;            New Add Subtract Divide Multiply
+;---------------------------------------------------------------
+(defn _Add [this v1 v2]
+  (assoc this :v1 v1 :v2 v2 :sign "+" :func (fn [a b] (+ a b))))
+(defn _Subtract [this v1 v2]
+  (assoc this :v1 v1 :v2 v2 :sign "-" :func (fn [a b] (- a b))))
+(defn _Divide [this v1 v2]
+  (assoc this :v1 v1 :v2 v2 :sign "/" :func (fn [a b] (/ (double a) b))))
+(defn _Multiply [this v1 v2]
+  (assoc this :v1 v1 :v2 v2 :sign "*" :func (fn [a b] (* a b))))
+(defn _Pow [this v1 v2]
+  (assoc this :v1 v1 :v2 v2 :sign "pow" :func (fn [a b] (Math/pow a b))))
+(defn _Log [this v1 v2]
+  (assoc this :v1 v1 :v2 v2 :sign "log" :func (fn [a b] (/ (Math/log (Math/abs b)) (Math/log (Math/abs a))))))
 
 (def BinProto
   {
-   :_evaluate (fn [x vars] (cond
-                             (= "/" (_sign x)) (/ (double (evaluate (_v1 x) vars)) (double (evaluate (_v2 x) vars)))
-                             (= "log" (_sign x)) (/ (Math/log (Math/abs (evaluate (_v2 x) vars))) (Math/log (Math/abs (evaluate (_v1 x) vars))))
-                             :else
-                             ((get m (_sign x)) (evaluate (_v1 x) vars) (evaluate (_v2 x) vars))
-                             ))
-   :_toString (fn [x] (str "(" (_sign x) " " (toString (_v1 x)) " " (toString (_v2 x)) ")"))
-   :_toSuffix (fn [x] (str "(" (toStringSuffix (_v1 x)) " " (toStringSuffix (_v2 x)) " " (_sign x) ")"))
+   :_evaluate (fn [x vars] ( (func x) (evaluate (_v1 x) vars) (evaluate (_v2 x) vars)))
+   :_toString (fn [x] (str "(" (_sign x) " " (toString (_v1 x)) " " (toString (_v2 x)) ")" ))
+   :_toSuffix (fn [x] (str "(" (toStringSuffix (_v1 x)) " " (toStringSuffix (_v2 x)) " " (_sign x) ")" ))
    })
-
-(defn _Add [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "+"))
-(defn _Subtract [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "-"))
-(defn _Divide [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "/"))
-(defn _Multiply [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "*"))
-(defn _Pow [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "pow"))
-(defn _Log [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "log"))
 
 (def Add (constructor _Add BinProto))
 (def Divide (constructor _Divide BinProto))
@@ -187,17 +180,4 @@
 ; (+seqf (fn [ps] apply (last ps) ps ) *( *value *ws (+opt *value) *ws *f *))
 ;(declare *suffix)
 ;(def *list (+map ()))
-
-
-(defn parsing [s]
-  (cond
-    (number? s) (Constant s)
-    (symbol? s) (Variable (name s))
-    (= 2 (count s)) ((get m-u (nth s 1)) (parsing (nth s 0)))
-    :else ((get m-b (nth s 2)) (parsing (nth s 0)) (parsing (nth s 1)))
-    ))
-
-(defn parseObjectSuffix [s] (parsing (read-string s)))
-
-
 
