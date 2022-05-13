@@ -54,7 +54,6 @@
 (def toString (method :_toString))
 (def toStringSuffix (method :_toSuffix))
 
-
 ;                 New Var and Const
 ;----------------------------------------------------
 (def func (field :func))
@@ -89,7 +88,7 @@
 
 (def UnoProto
   {
-   :_evaluate (fn [x vars] ( (func x) (evaluate (_v x) vars)))
+   :_evaluate (fn [x vars] ((func x) (evaluate (_v x) vars)))
    :_toString (fn [x] (str "(" (_sign x) " " (toString (_v x)) ")"))
    :_toSuffix (fn [x] (str "(" (toStringSuffix (_v x)) " " (_sign x) ")"))
    })
@@ -114,9 +113,9 @@
 
 (def BinProto
   {
-   :_evaluate (fn [x vars] ( (func x) (evaluate (_v1 x) vars) (evaluate (_v2 x) vars)))
-   :_toString (fn [x] (str "(" (_sign x) " " (toString (_v1 x)) " " (toString (_v2 x)) ")" ))
-   :_toSuffix (fn [x] (str "(" (toStringSuffix (_v1 x)) " " (toStringSuffix (_v2 x)) " " (_sign x) ")" ))
+   :_evaluate (fn [x vars] ((func x) (evaluate (_v1 x) vars) (evaluate (_v2 x) vars)))
+   :_toString (fn [x] (str "(" (_sign x) " " (toString (_v1 x)) " " (toString (_v2 x)) ")"))
+   :_toSuffix (fn [x] (str "(" (toStringSuffix (_v1 x)) " " (toStringSuffix (_v2 x)) " " (_sign x) ")"))
    })
 
 (def Add (constructor _Add BinProto))
@@ -159,25 +158,31 @@
 
 
 ;hw 12
-;(load-file "parser.clj")
+(load-file "parser.clj")
 
-;(def ops {'+ Add '- Subtract '* Multiply '/ Divide 'log Log 'pow Pow 'negate Negate})
-;(def *digit (+char "0123456789"))
-;(def *number (+map read-string (+str (+plus *digit))))
-;
-;(def *space (+char " \t\n\r"))
-;(def *ws (+ignore (+star *space)))
-;
-;(def *var (+map (comp Variable str) (+char "xyz")))
-;
-;(def *sub (+map (constantly Subtract) (_char "-")))
-;(def *add (+map (constantly Add) (_char "+")))
-;(def *div (+map (constantly Divide) (_char "/")))
-;(def *mul (+map (constantly Multiply) (_char "*")))
-;(def *neg (+map (constantly Negate) (+seq (_char "n") (_char "e") (_char "g") (_char "a") (_char "t") (_char "e"))))
-;(def *pow (+map (constantly Pow) (+seq (_char "p") (_char "o") (_char "w"))))
-;(def *pow (+map (constantly Log) (+seq (_char "l") (_char "o") (_char "g"))))
-; (+seqf (fn [ps] apply (last ps) ps ) *( *value *ws (+opt *value) *ws *f *))
-;(declare *suffix)
-;(def *list (+map ()))
+(def *digit (+map #(apply str %) (+plus (+char "-0123456789"))))
+(def *number (+map (comp Constant read-string) (+map #(apply str %) (+seq *digit (+opt (+map #(apply str %) (+seq (+char ".") *digit)))))))
+(def *space (+char " \t\n\r"))
+(def *ws (+ignore (+star *space)))
+(def *var (+map (comp Variable str) (+map #(apply str %) (+plus (+char "xyzXYZ")))))
+(def *sub (+map (constantly Subtract) (+char "-")))
+(def *add (+map (constantly Add) (+char "+")))
+(def *div (+map (constantly Divide) (+char "/")))
+(def *mul (+map (constantly Multiply) (+char "*")))
+(def *neg (+map (constantly Negate) (+seq (+char "n") (+char "e") (+char "g") (+char "a") (+char "t") (+char "e"))))
+
+
+(def *list (+map #(apply (last %) ((comp reverse rest reverse) %))
+                 (+seq
+                   (+ignore (+char "("))
+                   *ws
+                   (+or *number *var (delay *list))
+                   *ws
+                   (+or *number *var (delay *list) *ws)
+                   *ws
+                   (+or *sub *add *div *mul *neg)
+                   *ws
+                   (+ignore (+char ")")))))
+(defn parseObjectSuffix [s] (-value ((+map first (+seq *ws (+or *list *var *number))) s)))
+
 
