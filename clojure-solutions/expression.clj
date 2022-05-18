@@ -57,6 +57,18 @@
 ;                 New Var and Const
 ;----------------------------------------------------
 (def func (field :func))
+(def diff (method :_diff))
+
+
+(declare Constant)
+(declare Variable)
+(declare Add)
+(declare Subtract)
+(declare Multiply)
+(declare Divide)
+(declare Negate)
+(declare Ln)
+(declare Pow)
 
 (def VarProt {
               :_evaluate (fn [x vars] (get vars (_v x)))
@@ -71,20 +83,31 @@
                  })
 
 (defn Var [this v]
-  (assoc this :v (clojure.string/lower-case (str (get v 0))) :perm v))
+  (assoc this :v (clojure.string/lower-case (str (get v 0))) :perm v
+              :_diff (fn [x vars] (if (= vars (_v x)) (Constant 1) (Constant 0)))
+              ))
 
 (defn Cnst [this v]
-  (assoc this :v v :perm v))
+  (assoc this :v v :perm v :_diff (fn [x vars] (Constant 0))
+              ))
+
+;(def Cnst
+;  {:_diff (fn [x vars] (Constant 0))})
+
 
 (def Constant (constructor Cnst ConstProto))
 (def Variable (constructor Var VarProt))
 
 ;                     New Negate and Ln
 ;---------------------------------------------------------------
+
 (defn Neg [this v]
-  (assoc this :v v :func (fn [x] (- x)) :sign "negate"))
+  (assoc this :v v :func (fn [x] (- x)) :sign "negate"
+              :_diff (fn [x vars] (Negate (diff (_v x) vars)))))
 (defn _Ln [this v]
-  (assoc this :v v :func (fn [x] (Math/log (Math/abs x))) :sign "ln"))
+  (assoc this :v v :func (fn [x] (Math/log (Math/abs x))) :sign "ln"
+              :_diff (fn [x vars] (Multiply (Divide (Constant 1) (_v x)) (diff (_v x) vars)))
+              ))
 
 (def UnoProto
   {
@@ -98,18 +121,33 @@
 
 ;            New Add Subtract Divide Multiply
 ;---------------------------------------------------------------
+
 (defn _Add [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "+" :func (fn [a b] (+ a b))))
+  (assoc this :v1 v1 :v2 v2 :sign "+" :func (fn [a b] (+ a b))
+              :_diff (fn [x vars] (Add (diff (_v1 x) vars) (diff (_v2 x) vars)))
+              ))
 (defn _Subtract [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "-" :func (fn [a b] (- a b))))
+  (assoc this :v1 v1 :v2 v2 :sign "-" :func (fn [a b] (- a b))
+              :_diff (fn [x vars] (Subtract (diff (_v1 x) vars) (diff (_v2 x) vars)))
+              ))
 (defn _Divide [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "/" :func (fn [a b] (/ (double a) b))))
+  (assoc this :v1 v1 :v2 v2 :sign "/" :func (fn [a b] (/ (double a) b))
+              :_diff (fn [x vars] (Divide (Subtract (Multiply (diff (_v1 x) vars) (_v2 x))
+                                                     (Multiply (_v1 x) (diff (_v2 x) vars))) (Multiply (_v2 x) (_v2 x))))
+              ))
 (defn _Multiply [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "*" :func (fn [a b] (* a b))))
+  (assoc this :v1 v1 :v2 v2 :sign "*" :func (fn [a b] (* a b))
+              :_diff (fn [x vars] (Add (Multiply (diff (_v1 x) vars) (_v2 x))
+                                       (Multiply (_v1 x) (diff (_v2 x) vars))))
+              ))
 (defn _Pow [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "pow" :func (fn [a b] (Math/pow a b))))
+  (assoc this :v1 v1 :v2 v2 :sign "pow" :func (fn [a b] (Math/pow a b))
+              :_diff (fn [x vars] (Multiply (Pow (_v1 x) (_v2 x)) (diff (Multiply (_v2 x) (Ln (_v1 x))) vars)))
+              ))
 (defn _Log [this v1 v2]
-  (assoc this :v1 v1 :v2 v2 :sign "log" :func (fn [a b] (/ (Math/log (Math/abs b)) (Math/log (Math/abs a))))))
+  (assoc this :v1 v1 :v2 v2 :sign "log" :func (fn [a b] (/ (Math/log (Math/abs b)) (Math/log (Math/abs a))))
+              :_diff (fn [x vars] (diff (Divide (Ln (_v2 x)) (Ln (_v1 x))) vars))
+              ))
 
 (def BinProto
   {
@@ -124,24 +162,6 @@
 (def Multiply (constructor _Multiply BinProto))
 (def Log (constructor _Log BinProto))
 (def Pow (constructor _Pow BinProto))
-
-(defn diff [x vars]
-  (cond
-    (= "+" (_sign x)) (Add (diff (_v1 x) vars) (diff (_v2 x) vars))
-    (= "-" (_sign x)) (Subtract (diff (_v1 x) vars) (diff (_v2 x) vars))
-    (= "*" (_sign x)) (Add (Multiply (diff (_v1 x) vars) (_v2 x))
-                           (Multiply (_v1 x) (diff (_v2 x) vars)))
-    (= "/" (_sign x)) (Divide (Subtract (Multiply (diff (_v1 x) vars) (_v2 x))
-                                        (Multiply (_v1 x) (diff (_v2 x) vars))) (Multiply (_v2 x) (_v2 x)))
-    (= "pow" (_sign x)) (Multiply (Pow (_v1 x) (_v2 x)) (diff (Multiply (_v2 x) (Ln (_v1 x))) vars))
-    (= "ln" (_sign x)) (Multiply (Divide (Constant 1) (_v x)) (diff (_v x) vars))
-    (= "log" (_sign x)) (diff (Divide (Ln (_v2 x)) (Ln (_v1 x))) vars)
-
-    (= vars (_v x)) (Constant 1)
-    (= "cnst" (_sign x)) (Constant 0)
-    (= "negate" (_sign x)) (Negate (diff (_v x) vars))
-    :else (Constant 0)
-    ))
 
 (def m-b {'+ Add '- Subtract '* Multiply '/ Divide 'log Log 'pow Pow})
 (def m-u {'negate Negate})
