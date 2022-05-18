@@ -163,6 +163,26 @@
 (def Log (constructor _Log BinProto))
 (def Pow (constructor _Pow BinProto))
 
+; :NOTE-2:/2 behavious specific to a class should be defined in the class
+
+(defn diff [x vars]
+  (cond
+    (= "+" (_sign x)) (Add (diff (_v1 x) vars) (diff (_v2 x) vars))
+    (= "-" (_sign x)) (Subtract (diff (_v1 x) vars) (diff (_v2 x) vars))
+    (= "*" (_sign x)) (Add (Multiply (diff (_v1 x) vars) (_v2 x))
+                           (Multiply (_v1 x) (diff (_v2 x) vars)))
+    (= "/" (_sign x)) (Divide (Subtract (Multiply (diff (_v1 x) vars) (_v2 x))
+                                        (Multiply (_v1 x) (diff (_v2 x) vars))) (Multiply (_v2 x) (_v2 x)))
+    (= "pow" (_sign x)) (Multiply (Pow (_v1 x) (_v2 x)) (diff (Multiply (_v2 x) (Ln (_v1 x))) vars))
+    (= "ln" (_sign x)) (Multiply (Divide (Constant 1) (_v x)) (diff (_v x) vars))
+    (= "log" (_sign x)) (diff (Divide (Ln (_v2 x)) (Ln (_v1 x))) vars)
+
+    (= vars (_v x)) (Constant 1) ; :NOTE-2: do not allocate on each usage of a constant of 1 (or 0)
+    (= "cnst" (_sign x)) (Constant 0)
+    (= "negate" (_sign x)) (Negate (diff (_v x) vars))
+    :else (Constant 0)
+    ))
+
 (def m-b {'+ Add '- Subtract '* Multiply '/ Divide 'log Log 'pow Pow})
 (def m-u {'negate Negate})
 
