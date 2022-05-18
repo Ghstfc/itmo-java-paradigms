@@ -87,6 +87,8 @@
               :_diff (fn [x vars] (if (= vars (_v x)) (Constant 1) (Constant 0)))
               ))
 
+; :NOTE: you allocate on each 0 (and 1) constant usage
+
 (defn Cnst [this v]
   (assoc this :v v :perm v :_diff (fn [x vars] (Constant 0))
               ))
