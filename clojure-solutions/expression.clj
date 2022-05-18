@@ -125,6 +125,8 @@
 (def Log (constructor _Log BinProto))
 (def Pow (constructor _Pow BinProto))
 
+; :NOTE-2:/2 behavious specific to a class should be defined in the class
+
 (defn diff [x vars]
   (cond
     (= "+" (_sign x)) (Add (diff (_v1 x) vars) (diff (_v2 x) vars))
@@ -137,7 +139,7 @@
     (= "ln" (_sign x)) (Multiply (Divide (Constant 1) (_v x)) (diff (_v x) vars))
     (= "log" (_sign x)) (diff (Divide (Ln (_v2 x)) (Ln (_v1 x))) vars)
 
-    (= vars (_v x)) (Constant 1)
+    (= vars (_v x)) (Constant 1) ; :NOTE-2: do not allocate on each usage of a constant of 1 (or 0)
     (= "cnst" (_sign x)) (Constant 0)
     (= "negate" (_sign x)) (Negate (diff (_v x) vars))
     :else (Constant 0)
